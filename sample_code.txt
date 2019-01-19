@@ -1,0 +1,190 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[122]:
+
+
+dataset_file = "english_speech_2.txt"
+#dataset_2 = "dtu"
+
+
+# In[123]:
+
+
+## Markov Chains
+
+def load_text(filename):
+    with open(filename,encoding='utf8') as f:
+        return f.read().lower()
+    
+text = load_text(dataset_file)
+
+
+# In[15]:
+
+
+print(text[:50])
+
+
+# In[ ]:
+
+
+# From the dataset you want generate some X and Y pairs
+# X is the sequence of 'K = 3' and Y is predicted character or K+1 the character
+
+get_ipython().run_line_magic('pinfo', 'the_')
+X      Y     Freq
+the    " "    4
+the    "n"    2
+the    "y"    1
+the    "i"    1
+dea    "r"    1
+
+
+# In[20]:
+
+
+d = {
+    "the":{" ":4,"n":2,"i":1},
+    "dea":{"r":1}
+}
+
+
+# In[21]:
+
+
+d["the"]["n"]
+
+
+# In[31]:
+
+
+def generateTable(data,k=4):
+    T = {}
+    for i in range(len(data)-k):
+        X = data[i:i+k]
+        Y = data[i+k]
+        
+        if T.get(X) is None:
+            T[X] = {}
+            T[X][Y] = 1
+        else:
+            if T[X].get(Y) is None:
+                T[X][Y] =1
+            else:
+                T[X][Y] += 1
+    return T
+            
+
+
+# In[52]:
+
+
+T = generateTable("Hello Hello World Helli")
+generateTable("Hello Hello World Helli")
+
+
+# In[59]:
+
+
+def convertFreqIntoProb(T):
+    for kx in T.keys():
+        s = float(sum(T[kx].values()))
+        for k in T[kx].keys():
+            T[kx][k] = T[kx][k]/s
+    
+    return T
+        
+
+
+# In[60]:
+
+
+convertFreqIntoProb(T)
+
+
+# In[61]:
+
+
+def train(data,k):
+    T = generateTable(data,k)
+    T = convertFreqIntoProb(T)
+    return T
+    
+
+
+# In[63]:
+
+
+T = train(text,4)
+
+
+# In[88]:
+
+
+print(T)
+
+
+# In[79]:
+
+
+words = ["apple","mango","banana"]
+prob = [.2,.6,.2]
+
+import numpy as np
+
+
+# In[80]:
+
+
+for i in range(10):
+    print(np.random.choice(words,p=prob))
+
+
+# In[99]:
+
+
+def sample_next(ctx,T):
+    
+    ctx = ctx[-4:]
+    if T.get(ctx) is None:
+        return " "
+    possible_chars = list(T[ctx].keys())
+    possible_values = list(T[ctx].values())
+    #print(possible_chars)
+    #print(possible_values)
+    
+    return np.random.choice(possible_chars,p=possible_values)
+    
+
+
+# In[103]:
+
+
+sample_next("any ",T)
+
+
+# In[119]:
+
+
+def generateText(starting_sent,maxLen=100):
+    #np.random.seed(1)
+    sentence = starting_sent
+    ctx = starting_sent[-4:]
+    
+    for ix in range(maxLen):
+        next_prediction = sample_next(ctx,T)
+        sentence += next_prediction
+        ctx = sentence[-4:]
+    
+    return sentence
+
+
+# In[121]:
+
+
+generateText("then")
+
+
+
+
